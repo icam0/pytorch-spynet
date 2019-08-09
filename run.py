@@ -9,6 +9,7 @@ import os
 import PIL
 import PIL.Image
 import sys
+from pathlib import Path
 
 ##########################################################
 
@@ -30,6 +31,9 @@ for strOption, strArgument in getopt.getopt(sys.argv[1:], '', [ strParameter[2:]
     if strOption == '--first' and strArgument != '': arguments_strFirst = strArgument # path to the first frame
     if strOption == '--second' and strArgument != '': arguments_strSecond = strArgument # path to the second frame
     if strOption == '--out' and strArgument != '': arguments_strOut = strArgument # path to where the output should be stored
+    if strOption == '--folderin' and strArgument != '': arguments_strFolIn = strArgument  # path to input folder
+    if strOption == '--folderout' and strArgument != '': arguments_strFolOut = strArgument  # path to output folder
+    if strOption == '--batchmode' and strArgument != '': arguments_strBatchMode = True  # specify batch mode
 # end
 
 ##########################################################
@@ -160,16 +164,41 @@ def estimate(tensorFirst, tensorSecond):
 ##########################################################
 
 if __name__ == '__main__':
-    tensorFirst = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
-    tensorSecond = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
 
-    tensorOutput = estimate(tensorFirst, tensorSecond)
+    if arguments_strBatchMode:
+        images = []
+        for path, subdirs, files in os.walk(arguments_strFolIn):
+            for name in files:
+                images.append(os.path.join(path, name))
+        for i in range(int(len(images)*0.5)):
+            img_first = images[i*2]
+            img_second = images[i*2+1]
+            directory_name = Path(img_first).parts[-1]
+            tensorFirst = torch.FloatTensor(
+                numpy.array(PIL.Image.open(img_first))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
+                            1.0 / 255.0))
+            tensorSecond = torch.FloatTensor(
+                numpy.array(PIL.Image.open(img_second))[:, :, ::-1].transpose(2, 0, 1).astype(
+                    numpy.float32) * (1.0 / 255.0))
+            tensorOutput = estimate(tensorFirst, tensorSecond)
+            outfile = os.path.join(arguments_strFolOut,[directory_name,str(i)+'.png'])
+            print(outfile)
+            objectOutput = open(outfile, 'wb')
+            numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
+            numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(objectOutput)
+            numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
+            objectOutput.close()
 
-    objectOutput = open(arguments_strOut, 'wb')
+    else:
 
-    numpy.array([ 80, 73, 69, 72 ], numpy.uint8).tofile(objectOutput)
-    numpy.array([ tensorOutput.size(2), tensorOutput.size(1) ], numpy.int32).tofile(objectOutput)
-    numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
+        tensorFirst = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strFirst))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
+        tensorSecond = torch.FloatTensor(numpy.array(PIL.Image.open(arguments_strSecond))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (1.0 / 255.0))
+        tensorOutput = estimate(tensorFirst, tensorSecond)
+        objectOutput = open(arguments_strOut, 'wb')
 
-    objectOutput.close()
+        numpy.array([ 80, 73, 69, 72 ], numpy.uint8).tofile(objectOutput)
+        numpy.array([ tensorOutput.size(2), tensorOutput.size(1) ], numpy.int32).tofile(objectOutput)
+        numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
+
+        objectOutput.close()
 # end
