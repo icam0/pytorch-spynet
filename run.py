@@ -174,6 +174,7 @@ if __name__ == '__main__':
         for i in range(int(len(images)*0.5)):
             img_first = images[i*2]
             img_second = images[i*2+1]
+            print(Path(img_first).parts)
             directory_name = Path(img_first).parts[-1]
             tensorFirst = torch.FloatTensor(
                 numpy.array(PIL.Image.open(img_first))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
