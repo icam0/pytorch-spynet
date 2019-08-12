@@ -182,7 +182,8 @@ if __name__ == '__main__':
                 numpy.array(PIL.Image.open(img_second))[:, :, ::-1].transpose(2, 0, 1).astype(
                     numpy.float32) * (1.0 / 255.0))
             tensorOutput = estimate(tensorFirst, tensorSecond)
-            outfile = os.path.join(arguments_strFolOut,[directory_name,str(i)+'.png'])
+            print(outfile,directory_name,directory_name+str(i)+'.png')
+            outfile = os.path.join(arguments_strFolOut,directory_name+str(i)+'.png')
             print(outfile)
             objectOutput = open(outfile, 'wb')
             numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
