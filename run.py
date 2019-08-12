@@ -10,6 +10,8 @@ import PIL
 import PIL.Image
 import sys
 from pathlib import Path
+from skimage import io
+import mmcv
 
 ##########################################################
 
@@ -33,7 +35,8 @@ for strOption, strArgument in getopt.getopt(sys.argv[1:], '', [ strParameter[2:]
     if strOption == '--out' and strArgument != '': arguments_strOut = strArgument # path to where the output should be stored
     if strOption == '--folderin' and strArgument != '': arguments_strFolIn = strArgument  # path to input folder
     if strOption == '--folderout' and strArgument != '': arguments_strFolOut = strArgument  # path to output folder
-    if strOption == '--batchmode' and strArgument != '': arguments_strBatchMode = True  # specify batch mode
+    if strOption == '--batchmode': arguments_strBatchMode = True  # specify batch mode
+    if strOption == '--visflow': arguments_strVisFlow = True # visualize flow
 # end
 
 ##########################################################
@@ -174,7 +177,6 @@ if __name__ == '__main__':
         for i in range(int(len(images)*0.5)):
             img_first = images[i*2]
             img_second = images[i*2+1]
-            print(Path(img_first).parts)
             directory_name = Path(img_first).parts[-1]
             tensorFirst = torch.FloatTensor(
                 numpy.array(PIL.Image.open(img_first))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
@@ -184,13 +186,17 @@ if __name__ == '__main__':
                     numpy.float32) * (1.0 / 255.0))
             tensorOutput = estimate(tensorFirst, tensorSecond)
             print(arguments_strFolOut,directory_name,directory_name+str(i)+'.png')
-            outfile = os.path.join(arguments_strFolOut,directory_name+str(i)+'.png')
+            outfile = os.path.join(arguments_strFolOut,'%06d.flo'%(i))
             print(outfile)
             objectOutput = open(outfile, 'wb')
             numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
             numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(objectOutput)
             numpy.array(tensorOutput.numpy().transpose(1, 2, 0), numpy.float32).tofile(objectOutput)
             objectOutput.close()
+
+            if arguments_strVisFlow:
+                flow = mmcv.flow2rgb(mmcv.flowread(outfile))
+                io.imsave(outfile[0:-3] + 'png', flow)
 
     else:
 
