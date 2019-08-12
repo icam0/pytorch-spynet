@@ -169,7 +169,8 @@ if __name__ == '__main__':
         images = []
         for path, subdirs, files in os.walk(arguments_strFolIn):
             for name in files:
-                images.append(os.path.join(path, name))
+                if name[-3:] == 'png':
+                    images.append(os.path.join(path, name))
         for i in range(int(len(images)*0.5)):
             img_first = images[i*2]
             img_second = images[i*2+1]
