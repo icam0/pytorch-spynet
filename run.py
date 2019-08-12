@@ -174,10 +174,13 @@ if __name__ == '__main__':
             for name in files:
                 if name[-3:] == 'png':
                     images.append(os.path.join(path, name))
+        print(images)
+        print(sorted(images))
+        images = sorted(images)
         for i in range(int(len(images)*0.5)):
             img_first = images[i*2]
             img_second = images[i*2+1]
-            directory_name = Path(img_first).parts[-1]
+            directory_name = Path(img_first).parts[-2]
             tensorFirst = torch.FloatTensor(
                 numpy.array(PIL.Image.open(img_first))[:, :, ::-1].transpose(2, 0, 1).astype(numpy.float32) * (
                             1.0 / 255.0))
@@ -185,9 +188,8 @@ if __name__ == '__main__':
                 numpy.array(PIL.Image.open(img_second))[:, :, ::-1].transpose(2, 0, 1).astype(
                     numpy.float32) * (1.0 / 255.0))
             tensorOutput = estimate(tensorFirst, tensorSecond)
-            print(arguments_strFolOut,directory_name,directory_name+str(i)+'.png')
+            print(arguments_strFolOut,directory_name)
             outfile = os.path.join(arguments_strFolOut,'%06d.flo'%(i))
-            print(outfile)
             objectOutput = open(outfile, 'wb')
             numpy.array([80, 73, 69, 72], numpy.uint8).tofile(objectOutput)
             numpy.array([tensorOutput.size(2), tensorOutput.size(1)], numpy.int32).tofile(objectOutput)
