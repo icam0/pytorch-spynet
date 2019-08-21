@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 from skimage import io
 import mmcv
+import torchsummary
 
 ##########################################################
 
@@ -167,6 +168,12 @@ def estimate(tensorFirst, tensorSecond):
 ##########################################################
 
 if __name__ == '__main__':
+    test = True
+    if test:
+        print(Network())
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = Network().to(device)
+        print(torchsummary.summary(model,[(3,384,512),(3,384,512)]))
 
     if arguments_strBatchMode:
         images = []
